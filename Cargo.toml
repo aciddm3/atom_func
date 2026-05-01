@@ -1,0 +1,12 @@
+[package]
+name = "aciddm3_atom_func"
+version = "0.1.0"
+edition = "2024"
+description = "atomic functions for aciddm3 synth"
+license = "MIT OR Apache-2.0"
+
+[lib]
+name = "aciddm3_atom_func"
+path = "src/lib.rs"
+
+[dependencies]
