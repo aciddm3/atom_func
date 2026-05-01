@@ -10,3 +10,11 @@ name = "aciddm3_atom_func"
 path = "src/lib.rs"
 
 [dependencies]
+# serde = "1.0.228"
+
+[dev-dependencies]
+criterion = "0.5"  # для бенчмарков парсера
+
+[features]
+default = []
+sexpr_parser = []

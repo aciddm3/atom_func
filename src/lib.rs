@@ -1,5 +1,7 @@
 pub mod func;
 
+#[cfg(feature = "sexpr_parser")]
+pub mod parser;
 #[cfg(test)]
 mod tests {
     use crate::func::EnvFunction;
@@ -88,10 +90,6 @@ mod tests {
         f.simplify();
         assert_eval_eq(&f, 3.0, 6.0, 1e-5);
     }
-
-    // ─────────────────────────────────────────────────────
-    // 🔁 Двойные инверсии
-    // ─────────────────────────────────────────────────────
 
     #[test]
     fn test_simplify_double_neg() {
@@ -293,5 +291,6 @@ mod tests {
                 x, original, simplified
             );
         }
-    }
+    } 
+
 }
