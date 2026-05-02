@@ -18,3 +18,4 @@ criterion = "0.5"  # для бенчмарков парсера
 [features]
 default = []
 sexpr_parser = []
+simplifier = []
