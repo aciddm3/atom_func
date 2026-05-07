@@ -47,17 +47,16 @@ impl EnvFunction {
             | Self::Cos(inner)
             | Self::Neg(inner)
             | Self::Abs(inner)
-            | Self::Linear(inner, _, _) => {
-                if matches!(inner.as_ref(), Self::Constant(_)) {
-                    return Some(self.eval(0.0)); // eval сам применит защиту от NaN/Inf
-                }
+            | Self::Linear(inner, _, _)
+                if matches!(inner.as_ref(), Self::Constant(_)) =>
+            {
+                return Some(self.eval(0.0)); // eval сам применит защиту от NaN/Inf
             }
-            Self::Dif(l, r) | Self::Mul(l, r) | Self::Div(l, r) => {
+            Self::Dif(l, r) | Self::Mul(l, r) | Self::Div(l, r)
                 if matches!(l.as_ref(), Self::Constant(_))
-                    && matches!(r.as_ref(), Self::Constant(_))
-                {
-                    return Some(self.eval(0.0));
-                }
+                    && matches!(r.as_ref(), Self::Constant(_)) =>
+            {
+                return Some(self.eval(0.0));
             }
             _ => {}
         }
@@ -82,6 +81,10 @@ impl EnvFunction {
                 }
                 if *c == 1.0 {
                     *self = *inner.clone();
+                    return;
+                }
+                if *c == -1.0 {
+                    *self = Self::Neg(inner.clone());
                     return;
                 }
                 if let Self::ConstMul(inner2, b) = inner.as_mut() {
@@ -112,7 +115,6 @@ impl EnvFunction {
                 }
                 if *b == 0.0 {
                     *self = Self::ConstMul(inner.clone(), *k);
-                    return;
                 }
             }
 
@@ -121,7 +123,6 @@ impl EnvFunction {
                     *self = Self::Constant(1.0);
                 } else if *p == 1.0 {
                     *self = *inner.clone();
-                    return;
                 } else if let Self::Powf(v, p2) = inner.as_mut() {
                     *self = Self::Powf(v.clone(), *p * *p2);
                 } else if let Self::Powi(v, p2) = inner.as_mut() {
@@ -163,6 +164,8 @@ impl EnvFunction {
             Self::Neg(inner) => {
                 if let Self::Neg(inner2) = inner.as_mut() {
                     *self = *inner2.clone();
+                } else if let Self::ConstMul(inner2, c) = inner.as_ref() {
+                    *self = Self::ConstMul(inner2.clone(), -*c); // -(c*x) → (-c)*x
                 }
             }
 
@@ -181,6 +184,12 @@ impl EnvFunction {
                 }
                 if let Self::Constant(v) = r.as_ref() {
                     *self = Self::Linear(l.clone(), 1.0, *v);
+                    return;
+                }
+                if let Self::Neg(inner_l) = l.as_ref()
+                    && let Self::Neg(inner_r) = r.as_ref()
+                {
+                    *self = Self::Neg(Box::new(Self::Sum(inner_l.clone(), inner_r.clone())))
                 }
             }
 
@@ -191,6 +200,12 @@ impl EnvFunction {
                 }
                 if let Self::Constant(v) = r.as_ref() {
                     *self = Self::Linear(l.clone(), 1.0, -*v);
+                    return;
+                }
+                if let Self::Neg(inner_l) = l.as_ref()
+                    && let Self::Neg(inner_r) = r.as_ref()
+                {
+                    *self = Self::Neg(Box::new(Self::Dif(inner_l.clone(), inner_r.clone())))
                 }
             }
 
@@ -201,6 +216,18 @@ impl EnvFunction {
                 }
                 if let Self::Constant(c) = r.as_ref() {
                     *self = Self::ConstMul(l.clone(), *c);
+                    return;
+                }
+                if let Self::Neg(inner_l) = l.as_mut()
+                    && let Self::Neg(inner_r) = r.as_mut()
+                {
+                    *l = inner_l.clone();
+                    *r = inner_r.clone();
+                }
+                if let Self::Abs(inner_l) = l.as_ref()
+                    && let Self::Abs(inner_r) = r.as_ref()
+                {
+                    *self = Self::Abs(Box::new(Self::Mul(inner_l.clone(), inner_r.clone())))
                 }
             }
 
@@ -212,6 +239,17 @@ impl EnvFunction {
                         *self = Self::ConstMul(l.clone(), 1.0 / *c);
                     }
                     return;
+                }
+                if let Self::Neg(inner_l) = l.as_mut()
+                    && let Self::Neg(inner_r) = r.as_mut()
+                {
+                    *l = inner_l.clone();
+                    *r = inner_r.clone();
+                }
+                if let Self::Abs(inner_l) = l.as_ref()
+                    && let Self::Abs(inner_r) = r.as_ref()
+                {
+                    *self = Self::Abs(Box::new(Self::Div(inner_l.clone(), inner_r.clone())))
                 }
             }
             _ => {}

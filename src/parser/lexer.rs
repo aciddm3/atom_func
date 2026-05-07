@@ -96,7 +96,6 @@ impl<'a> Lexer<'a> {
     }
 
     fn parse_symbol(&mut self) -> ParseResult<Token> {
-        let start_pos = (self.line, self.column);
         let mut sym = String::with_capacity(32);
         
         while let Some(c) = self.peek() {
