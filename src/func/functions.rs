@@ -5,7 +5,7 @@ const FRAC_3PI_2: f32 = PI + FRAC_PI_2;
 pub fn sigmoid(x: f32) -> f32 {
     if x >= 15.0 {
         1.0
-    } else if x <= 15.0 {
+    } else if x <= -15.0 {
         0.0
     } else {
         1.0 / (1.0 + (-x).exp())
