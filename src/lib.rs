@@ -1,9 +1,9 @@
 pub mod func;
 
-#[cfg(feature = "sexpr_parser")]
+//#[cfg(feature = "sexpr_parser")]
 pub mod parser;
 
-#[cfg(feature = "simplifier")]
+//#[cfg(feature = "simplifier")]
 pub mod simplifier;
 
 #[cfg(test)]
@@ -26,11 +26,8 @@ mod tests {
     #[test]
     fn test_sine() {
         let func = EnvFunction::Sin(Box::new(EnvFunction::Arg));
-        let vc = (-32000..32000).map(|s| s as f32).collect::<Vec<_>>();
-        assert_eq!(
-            vc.iter().map(|&x| x.sin()).collect::<Vec<_>>(),
-            vc.iter().map(|&x| func.eval(x)).collect::<Vec<_>>()
-        );
+        (-32000..32000)
+            .map(|s| s as f32)
+            .for_each(|x| assert!((x.sin() - func.eval(x)).abs() < 1e-3));
     }
-
 }

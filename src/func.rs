@@ -1,6 +1,6 @@
 mod functions;
 
-const EPS: f32 = 1e-7;
+pub const EPS: f32 = 1e-7;
 
 #[derive(Debug, Default, Clone)]
 pub enum EnvFunction {
@@ -39,37 +39,37 @@ impl EnvFunction {
         let res = match self {
             Self::Arg => x,
             Self::Constant(t) => *t,
-            Self::Id(inner) => Self::eval(inner, x),
-            Self::Exp(inner) => Self::eval(inner, x).exp(),
-            Self::Sigmoid(inner) => functions::sigmoid(Self::eval(inner, x)),
-            Self::Ln(inner) => Self::eval(inner, x).ln(),
-            Self::Sin(inner) => Self::eval(inner, x).sin(),
-            Self::Cos(inner) => Self::eval(inner, x).cos(),
-            Self::Linear(inner, k, b) => *k * Self::eval(inner, x) + *b,
-            Self::Powf(inner, p) => Self::eval(inner, x).powf(*p),
-            Self::Powi(inner, p) => Self::eval(inner, x).powi(*p),
+            Self::Id(inner) => inner.eval(x),
+            Self::Exp(inner) => inner.eval(x).exp(),
+            Self::Sigmoid(inner) => functions::sigmoid(inner.eval(x)),
+            Self::Ln(inner) => inner.eval(x).ln(),
+            Self::Sin(inner) => functions::approx_sine(inner.eval(x)),
+            Self::Cos(inner) => functions::approx_cosine(inner.eval(x)),
+            Self::Linear(inner, k, b) => *k * inner.eval(x) + *b,
+            Self::Powf(inner, p) => inner.eval(x).powf(*p),
+            Self::Powi(inner, p) => inner.eval(x).powi(*p),
             Self::Periodic(inner, p) => {
                 let period = p.abs().max(1e-5);
-                Self::eval(inner, x.rem_euclid(period))
+                inner.eval(x.rem_euclid(period))
             }
             Self::InvVal(inner) => {
-                let inv = Self::eval(inner, x);
+                let inv = inner.eval(x);
                 if inv.abs() < EPS { 0.0 } else { 1.0 / inv }
             }
-            Self::Neg(inner) => -Self::eval(inner, x),
-            Self::Abs(inner) => Self::eval(inner, x).abs(),
-            Self::Sum(inner, inner2) => Self::eval(inner, x) + Self::eval(inner2, x),
-            Self::Dif(inner, inner2) => Self::eval(inner, x) - Self::eval(inner2, x),
-            Self::Mul(inner, inner2) => Self::eval(inner, x) * Self::eval(inner2, x),
+            Self::Neg(inner) => -inner.eval(x),
+            Self::Abs(inner) => inner.eval(x).abs(),
+            Self::Sum(inner, inner2) => inner.eval(x) + inner2.eval(x),
+            Self::Dif(inner, inner2) => inner.eval(x) - inner2.eval(x),
+            Self::Mul(inner, inner2) => inner.eval(x) * inner2.eval(x),
             Self::Div(inner, inner2) => {
-                let inv = Self::eval(inner2, x);
+                let inv = inner2.eval(x);
                 if inv.abs() < EPS {
                     0.0
                 } else {
-                    Self::eval(inner, x) / inv
+                    inner.eval(x) / inv
                 }
             }
-            Self::ConstMul(inner, c) => c * Self::eval(inner, x),
+            Self::ConstMul(inner, c) => c * inner.eval(x),
         };
         if res.is_finite() && !res.is_nan() {
             res
