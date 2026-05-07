@@ -1,9 +1,9 @@
 pub mod func;
 
-//#[cfg(feature = "sexpr_parser")]
+#[cfg(feature = "sexpr_parser")]
 pub mod parser;
 
-//#[cfg(feature = "simplifier")]
+#[cfg(feature = "simplifier")]
 pub mod simplifier;
 
 #[cfg(test)]
