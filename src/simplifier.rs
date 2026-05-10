@@ -189,7 +189,16 @@ impl EnvFunction {
                 if let Self::Neg(inner_l) = l.as_ref()
                     && let Self::Neg(inner_r) = r.as_ref()
                 {
-                    *self = Self::Neg(Box::new(Self::Sum(inner_l.clone(), inner_r.clone())))
+                    *self = Self::Neg(Box::new(Self::Sum(inner_l.clone(), inner_r.clone())));
+                    return;
+                }
+                if let Self::Neg(inner_l) = l.as_ref() {
+                    *self = Self::Dif(r.clone(), inner_l.clone());
+                    return;
+                }
+                if let Self::Neg(inner_r) = r.as_ref() {
+                    *self = Self::Dif(l.clone(), inner_r.clone());
+                    return;
                 }
             }
 
@@ -205,7 +214,15 @@ impl EnvFunction {
                 if let Self::Neg(inner_l) = l.as_ref()
                     && let Self::Neg(inner_r) = r.as_ref()
                 {
-                    *self = Self::Neg(Box::new(Self::Dif(inner_l.clone(), inner_r.clone())))
+                    *self = Self::Dif(inner_r.clone(), inner_l.clone());
+                    return;
+                }
+                if let Self::Neg(inner_r) = r.as_ref() {
+                    *self = Self::Sum(l.clone(), inner_r.clone());
+                    return;
+                }
+                if let Self::Neg(inner_l) = l.as_ref() {
+                    *self = Self::Neg(Box::new(Self::Sum(inner_l.clone(), r.clone())));
                 }
             }
 
@@ -542,6 +559,78 @@ mod test {
             assert_eq!(*p, -2);
         } else {
             panic!("Expected Powi(Arg, -2)");
+        }
+    }
+
+    #[test]
+    fn test_sum_right_neg_to_dif() {
+        let mut f = EnvFunction::Sum(
+            Box::new(EnvFunction::Arg),
+            Box::new(EnvFunction::Neg(Box::new(EnvFunction::Arg))),
+        );
+        println!("Before simp: {:?}", f);
+        f.simplify::<16>();
+        println!("After simp : {:?}", f);
+        if let EnvFunction::Dif(l, r) = f {
+            assert!(matches!(*l, EnvFunction::Arg));
+            assert!(matches!(*r, EnvFunction::Arg));
+        } else {
+            panic!()
+        }
+    }
+
+    #[test]
+    fn test_sum_left_neg_to_dif() {
+        let mut f = EnvFunction::Sum(
+            Box::new(EnvFunction::Neg(Box::new(EnvFunction::Arg))),
+            Box::new(EnvFunction::Arg),
+        );
+        println!("Before simp: {:?}", f);
+        f.simplify::<16>();
+        println!("After simp : {:?}", f);
+        if let EnvFunction::Dif(l, r) = f {
+            assert!(matches!(*l, EnvFunction::Arg));
+            assert!(matches!(*r, EnvFunction::Arg));
+        } else {
+            panic!()
+        }
+    }
+
+    #[test]
+    fn test_dif_right_neg_to_sum() {
+        let mut f = EnvFunction::Dif(
+            Box::new(EnvFunction::Arg),
+            Box::new(EnvFunction::Neg(Box::new(EnvFunction::Arg))),
+        );
+        println!("Before simp: {:?}", f);
+        f.simplify::<16>();
+        println!("After simp : {:?}", f);
+        if let EnvFunction::Sum(l, r) = f {
+            assert!(matches!(*l, EnvFunction::Arg));
+            assert!(matches!(*r, EnvFunction::Arg));
+        } else {
+            panic!()
+        }
+    }
+
+    #[test]
+    fn test_dif_left_neg_to_neg_sum() {
+        let mut f = EnvFunction::Dif(
+            Box::new(EnvFunction::Neg(Box::new(EnvFunction::Arg))),
+            Box::new(EnvFunction::Arg),
+        );
+        println!("Before simp: {:?}", f);
+        f.simplify::<16>();
+        println!("After simp : {:?}", f);
+        if let EnvFunction::Neg(inner) = f {
+            if let EnvFunction::Sum(l, r) = *inner {
+                assert!(matches!(*l, EnvFunction::Arg));
+                assert!(matches!(*r, EnvFunction::Arg));
+            } else {
+                panic!()
+            }
+        } else {
+            panic!()
         }
     }
 }
