@@ -1,5 +1,4 @@
-use crate::func::{EPS, EnvFunction};
-
+use crate::func::{EPS, EnvFunction, EnvFunctionArguments};
 impl EnvFunction {
     #[inline]
     pub fn simplify<const MAX_RECURSION_DEPTH: usize>(&mut self) {
@@ -50,13 +49,13 @@ impl EnvFunction {
             | Self::Linear(inner, _, _)
                 if matches!(inner.as_ref(), Self::Constant(_)) =>
             {
-                return Some(self.eval(0.0)); // eval сам применит защиту от NaN/Inf
+                return Some(self.eval(EnvFunctionArguments::default())); // eval сам применит защиту от NaN/Inf
             }
             Self::Dif(l, r) | Self::Mul(l, r) | Self::Div(l, r)
                 if matches!(l.as_ref(), Self::Constant(_))
                     && matches!(r.as_ref(), Self::Constant(_)) =>
             {
-                return Some(self.eval(0.0));
+                return Some(self.eval(EnvFunctionArguments::default()));
             }
             _ => {}
         }
@@ -276,9 +275,14 @@ impl EnvFunction {
 
 #[cfg(test)]
 mod test {
-    use crate::func::EnvFunction;
+    use crate::func::{EnvFunction, EnvFunctionArguments};
+    #[inline]
+    fn env_arg_default_but_t (t : f32) -> EnvFunctionArguments {
+        EnvFunctionArguments{t, ..Default::default()}
+    } 
+    
     fn assert_eval_eq(f: &EnvFunction, x: f32, expected: f32, tolerance: f32) {
-        let actual = f.eval(x);
+        let actual = f.eval(env_arg_default_but_t (x));
         assert!(
             (actual - expected).abs() < tolerance,
             "f({}) = {}, expected {}",
@@ -520,8 +524,8 @@ mod test {
         // Проверяем, что значения совпадают на нескольких точках
         let points = vec![0.0, 1.0, std::f32::consts::PI / 2.0, std::f32::consts::PI];
         for x in points {
-            let original = f.eval(x);
-            let simplified = f_simplified.eval(x);
+            let original = f.eval(env_arg_default_but_t (x));
+            let simplified = f_simplified.eval(env_arg_default_but_t (x));
             assert!(
                 (original - simplified).abs() < 1e-4,
                 "Расхождение при x={}: {} vs {}",

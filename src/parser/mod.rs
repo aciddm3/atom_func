@@ -331,6 +331,7 @@ mod test {
             ("TAU", TAU),
             ("τ", TAU),
             ("PHI", 1.618033988749895),
+            ("φ", 1.618033988749895),
         ];
     
         for (src, expected) in cases {
@@ -341,5 +342,13 @@ mod test {
                 panic!("expected Constant at '{}', got {:?}", src, f);
             }
         }
+    }
+
+    #[test]
+    fn test_arguments() {
+        let inputs = ["arg", "prval", "vel", "freq", "p1", "p2", "p3", "p4"];
+        let exp_outputs = [EnvFunction::Arg, EnvFunction::PrevVal, EnvFunction::Velocity, EnvFunction::Frequency, 
+        EnvFunction::P1, EnvFunction::P2 , EnvFunction::P3 , EnvFunction::P4];
+        inputs.into_iter().zip(exp_outputs.into_iter()).for_each(|(str, _e)| assert!(matches!(parse_func(str).unwrap(), _e)));
     }
 }

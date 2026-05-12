@@ -14,10 +14,19 @@ pub fn to_env(expr: SExpr) -> ParseResult<EnvFunction> {
 fn symbol_to_env(sym: &str) -> ParseResult<EnvFunction> {
     match sym {
         "arg" => Ok(EnvFunction::Arg),
+        "prval" => Ok(EnvFunction::PrevVal),
+        "vel" => Ok(EnvFunction::Velocity),
+        "freq" => Ok(EnvFunction::Frequency),
+        
+        "p1" => Ok(EnvFunction::P1),
+        "p2" => Ok(EnvFunction::P2),
+        "p3" => Ok(EnvFunction::P3),
+        "p4" => Ok(EnvFunction::P4),
+
         "PI" | "π" => Ok(EnvFunction::Constant(std::f32::consts::PI)),
         "TAU" | "TWOPI" | "τ" => Ok(EnvFunction::Constant(std::f32::consts::TAU)),
         "E" => Ok(EnvFunction::Constant(std::f32::consts::E)),
-        "PHI" => Ok(EnvFunction::Constant(1.618033988749895)),
+        "PHI" | "φ" => Ok(EnvFunction::Constant(1.618033988749895)),
         _ => Err(ParseError {
             kind: ErrorKind::UnknownSymbol(sym.to_string()),
             line: 0,
