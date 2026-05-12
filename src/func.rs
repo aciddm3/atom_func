@@ -39,6 +39,7 @@ pub enum EnvFunction {
     Sin(Box<Self>),
     Cos(Box<Self>),
     // transformation
+    Oct(Box<Self>, f32),
     Linear(Box<Self>, f32, f32),
     Powf(Box<Self>, f32),
     Powi(Box<Self>, i32),
@@ -74,6 +75,7 @@ impl EnvFunction {
             Self::Ln(inner) => inner.eval(arg).ln(),
             Self::Sin(inner) => functions::approx_sine(inner.eval(arg)),
             Self::Cos(inner) => functions::approx_cosine(inner.eval(arg)),
+            Self::Oct(inner, frq) => 2_f32.powf(inner.eval(arg)) * *frq,
             Self::Linear(inner, k, b) => *k * inner.eval(arg) + *b,
             Self::Powf(inner, p) => inner.eval(arg).powf(*p),
             Self::Powi(inner, p) => inner.eval(arg).powi(*p),
@@ -104,6 +106,39 @@ impl EnvFunction {
             res
         } else {
             0.0
+        }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use crate::func::{EPS, EnvFunction, EnvFunctionArguments};
+
+    #[test]
+    fn check_octave() {
+        for frq in [0.0, 50.0, 196.0, 220.0, 440.0] {
+            let tree = EnvFunction::Oct(Box::new(EnvFunction::Arg), frq);
+            let input = [-3.0, -2.0, -1.0, 0.0, 1.0, 2.0, 3.0]
+                .map(|t| EnvFunctionArguments {
+                    t,
+                    ..Default::default()
+                })
+                .map(|x| tree.eval(x));
+            let expected = [
+                frq / 8.0,
+                frq / 4.0,
+                frq / 2.0,
+                frq,
+                2.0 * frq,
+                4.0 * frq,
+                8.0 * frq,
+            ];
+            println!("frequency : {frq}");
+            for (i, o) in input.into_iter().zip(expected.into_iter()) {
+                print!("{i} vs {o}");
+                assert!((i - o).abs() < EPS);
+                println!(" - ok")
+            }
         }
     }
 }
