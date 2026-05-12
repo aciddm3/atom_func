@@ -99,7 +99,6 @@ fn list_to_env(list: Vec<SExpr>) -> ParseResult<EnvFunction> {
         "inv" | "inv-val" => unary!(InvVal),
 
         // === Unary + f32 param ===
-        "oct" => unary_param!(Oct, 1),
         "const-mul" => unary_param!(ConstMul, 1),
         "powf" => unary_param!(Powf, 1),
         "periodic" => unary_param!(Periodic, 1),
@@ -124,6 +123,7 @@ fn list_to_env(list: Vec<SExpr>) -> ParseResult<EnvFunction> {
         }
 
         // === Binary functions ===
+        "oct" => binary!(Oct),
         "+" => binary!(Sum),
         "-" => binary!(Dif),
         "*" => binary!(Mul),
